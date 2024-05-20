@@ -85,13 +85,15 @@ h6 {
 }
 
 @page {
-  size: A4 landscape;
+  size: 297mm 210mm landscape;
   margin: 0;
 }
 @media print {
-  html, body {
+  html,
+  body {
     width: 297mm;
     height: 210mm;
+    margin: 3mm;
   }
   /* ... the rest of the rules ... */
 }
