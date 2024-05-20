@@ -93,8 +93,5 @@ h6 {
     width: 297mm;
     height: 210mm;
   }
-  #edit-button {
-    display: none;
-  }
   /* ... the rest of the rules ... */
 }

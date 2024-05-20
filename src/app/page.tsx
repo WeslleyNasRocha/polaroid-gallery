@@ -93,7 +93,7 @@ export default function Component() {
                 {photos.map((p, i) => (
                   <div
                     key={i}
-                    className="relative group overflow-hidden border px-2 pt-2 pb-12"
+                    className="relative group overflow-hidden border border-slate-200 px-2 pt-2 pb-12"
                   >
                     <Image
                       alt="Polaroid Image"
@@ -114,23 +114,11 @@ export default function Component() {
         </div>
       ) : (
         <>
-          {/* <div id="edit-button" className="flex justify-center mb-5">
-            <Button
-              className="inline-flex items-center justify-center px-4 py-2 bg-blue-500 hover:bg-blue-600 hover:text-white text-white font-medium rounded-md cursor-pointer transition-colors"
-              variant="outline"
-              onClick={() => {
-                setPrintMode(false);
-              }}
-            >
-              <DeleteIcon className="mr-2 h-5 w-5" />
-              Edit
-            </Button>
-          </div> */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {photos.map((p, i) => (
               <div
                 key={i}
-                className="relative group overflow-hidden border px-2 pt-2 pb-12"
+                className="relative group overflow-hidden border border-slate-200 px-2 pt-2 pb-12"
               >
                 <Image
                   alt="Polaroid Image"
