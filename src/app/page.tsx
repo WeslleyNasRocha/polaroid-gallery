@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export default function Component() {
   const [printMode, setPrintMode] = useState(false);
   const [photos, setPhotos] = useState<Array<string | null>>(
@@ -27,9 +29,14 @@ export default function Component() {
   };
 
   useEffect(() => {
-    if (printMode) {
+    const print = async () => {
+      await wait(500);
       window.print();
+      await wait(500);
       setPrintMode(false);
+    };
+    if (printMode) {
+      print();
     }
   }, [printMode]);
 
@@ -37,7 +44,7 @@ export default function Component() {
     <main
       className={
         printMode
-          ? "m-[3mm]"
+          ? "m-[3mm] min-h-screen"
           : "flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4 md:p-8"
       }
     >

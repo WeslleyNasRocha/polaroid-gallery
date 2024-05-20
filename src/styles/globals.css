@@ -89,9 +89,9 @@ h6 {
   margin: 0;
 }
 @media print {
-  .print-mode {
-    width: 210mm;
-    height: 297mm;
+  html, body {
+    width: 297mm;
+    height: 210mm;
   }
   #edit-button {
     display: none;
