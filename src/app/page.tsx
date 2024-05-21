@@ -2,7 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { twMerge } from "tailwind-merge";
+import {
+  DeleteIcon,
+  ExcludeIcon,
+  PrinterIcon,
+  ReplaceIcon,
+  UploadIcon,
+} from "./icons";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -11,8 +19,19 @@ export default function Component() {
   const [photos, setPhotos] = useState<Array<string | null>>(
     Array(8).fill(null)
   );
+  const [replaceId, setReplaceId] = useState<number | null>(null);
+
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
+      if (e.target.name === "upload_single" && replaceId !== null) {
+        setPhotos((prevPhotos) => {
+          const newPhotos = [...prevPhotos];
+          newPhotos[replaceId] = URL.createObjectURL(e.target.files![0]);
+          return newPhotos;
+        });
+        setReplaceId(null);
+        return;
+      }
       setPhotos((prevPhotos) => {
         const newPhotos = [...prevPhotos]; // create a copy of the array
         Array.from(e.target.files!).forEach((file) => {
@@ -27,6 +46,18 @@ export default function Component() {
       });
     }
   };
+
+  useEffect(() => {
+    if (photos.length % 8 !== 0) {
+      setPhotos((prevPhotos) => {
+        const newPhotos = [...prevPhotos];
+        for (let i = 0; i < 8 - (photos.length % 8); i++) {
+          newPhotos.push(null);
+        }
+        return newPhotos;
+      });
+    }
+  }, [photos]);
 
   return (
     <main
@@ -60,9 +91,21 @@ export default function Component() {
                   accept="image/*"
                   className="hidden"
                   id="upload"
+                  name="upload"
                   multiple
                   type="file"
                   onChange={handleUpload}
+                />
+                <input
+                  accept="image/*"
+                  className="hidden"
+                  name="upload_single"
+                  id="upload_single"
+                  type="file"
+                  onChange={handleUpload}
+                  onAbort={() => {
+                    setReplaceId(null);
+                  }}
                 />
                 <Button
                   className="flex items-center justify-center px-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
@@ -79,22 +122,55 @@ export default function Component() {
             <div id="photo-gallery">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {photos.map((p, i) => (
-                  <div
-                    key={i}
-                    className="relative group overflow-hidden border border-slate-200 px-2 pt-2 pb-12"
-                  >
-                    <Image
-                      alt="Polaroid Image"
-                      className="w-full h-auto object-cover transition-transform duration-300 rounded-lg"
-                      height={400}
-                      src={p ?? "/placeholder.svg"}
-                      style={{
-                        aspectRatio: "8.8/10.7",
-                        objectFit: "cover",
-                      }}
-                      width={300}
-                    />
-                  </div>
+                  <>
+                    {i % 8 === 0 && i !== 0 && (
+                      <hr className="col-span-full border-dashed my-4" />
+                    )}
+                    <div
+                      key={i}
+                      className="relative group overflow-hidden border border-slate-200 px-2 pt-2 pb-12 hover:"
+                    >
+                      <Image
+                        alt="Polaroid Image"
+                        className="w-full h-auto object-cover transition-transform duration-300 rounded-lg"
+                        height={400}
+                        src={p ?? "/placeholder.svg"}
+                        style={{
+                          aspectRatio: "8.8/10.7",
+                          objectFit: "cover",
+                        }}
+                        width={300}
+                      />
+                      <div className="absolute hidden gap-2 group-hover:flex bottom-2 right-2">
+                        <Button
+                          className={twMerge(
+                            "p-1 h-7 w-7 bg-red-300 hover:bg-red-400 text-gray-100 transition-colors",
+                            p ? "visible" : "invisible"
+                          )}
+                          title="Delete Image"
+                          onClick={() => {
+                            setPhotos((prevPhotos) => {
+                              const newPhotos = [...prevPhotos];
+                              newPhotos[i] = null;
+                              return newPhotos;
+                            });
+                          }}
+                        >
+                          <ExcludeIcon className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          className="p-1 h-7 w-7 bg-blue-300 hover:bg-blue-400 text-gray-100 transition-colors"
+                          title="Replace Image"
+                          onClick={() => {
+                            setReplaceId(i);
+                            document.getElementById("upload_single")?.click();
+                          }}
+                        >
+                          <ReplaceIcon className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </>
                 ))}
               </div>
             </div>
@@ -120,90 +196,29 @@ export default function Component() {
             </Button>
           </div>
           <div className="grid grid-cols-4 gap-4">
-            {photos.map((p, i) => (
-              <div
-                key={i}
-                className="relative group overflow-hidden border border-slate-200 px-2 pt-2 pb-12"
-              >
-                <Image
-                  alt="Polaroid Image"
-                  className="w-full h-auto object-cover transition-transform duration-300 rounded-lg"
-                  height={400}
-                  src={p ?? "/placeholder.svg"}
-                  style={{
-                    aspectRatio: "8.8/10.7",
-                    objectFit: "cover",
-                  }}
-                  width={300}
-                />
-              </div>
-            ))}
+            {photos.map((p, i) =>
+              p ? (
+                <div
+                  key={i}
+                  className="relative group overflow-hidden border border-slate-200 px-2 pt-2 pb-12"
+                >
+                  <Image
+                    alt="Polaroid Image"
+                    className="w-full h-auto object-cover transition-transform duration-300 rounded-lg"
+                    height={400}
+                    src={p}
+                    style={{
+                      aspectRatio: "8.8/10.7",
+                      objectFit: "cover",
+                    }}
+                    width={300}
+                  />
+                </div>
+              ) : null
+            )}
           </div>
         </>
       )}
     </main>
-  );
-}
-
-function PrinterIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-      <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6" />
-      <rect x="6" y="14" width="12" height="8" rx="1" />
-    </svg>
-  );
-}
-
-function UploadIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" x2="12" y1="3" y2="15" />
-    </svg>
-  );
-}
-
-function DeleteIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z" />
-      <line x1="18" x2="12" y1="9" y2="15" />
-      <line x1="12" x2="18" y1="9" y2="15" />
-    </svg>
   );
 }
