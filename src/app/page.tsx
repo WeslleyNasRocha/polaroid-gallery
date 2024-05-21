@@ -124,7 +124,16 @@ export default function Component() {
                 {photos.map((p, i) => (
                   <>
                     {i % 8 === 0 && i !== 0 && (
-                      <hr className="col-span-full border-dashed my-4" />
+                      <>
+                        <hr className="col-span-full border-dashed mt-4" />
+                      </>
+                    )}
+                    {i % 8 === 0 && (
+                      <>
+                        <div className="col-span-full text-end text-xs font-light">
+                          Page {Math.floor(i / 8) + 1}
+                        </div>
+                      </>
                     )}
                     <div
                       key={i}
