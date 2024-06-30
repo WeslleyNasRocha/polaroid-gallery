@@ -1,12 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import getCroppedImg from "@/lib/cropImage";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import Cropper, { Area } from "react-easy-crop";
 import { twMerge } from "tailwind-merge";
 import {
   DeleteIcon,
   ExcludeIcon,
+  FilePenIcon,
   PrinterIcon,
   ReplaceIcon,
   UploadIcon,
@@ -16,6 +20,10 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function Component() {
   const [printMode, setPrintMode] = useState(false);
+  const [showEditModal, setShowEditModal] = useState<null | number>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [photos, setPhotos] = useState<Array<string | null>>(
     Array(8).fill(null)
   );
@@ -168,6 +176,18 @@ export default function Component() {
                           <ExcludeIcon className="h-5 w-5" />
                         </Button>
                         <Button
+                          className={twMerge(
+                            "p-1 h-7 w-7 bg-green-300 hover:bg-green-400 text-gray-100 transition-colors",
+                            p ? "visible" : "invisible"
+                          )}
+                          title="Edit Image"
+                          onClick={() => {
+                            setShowEditModal(i);
+                          }}
+                        >
+                          <FilePenIcon className="h-5 w-5" />
+                        </Button>
+                        <Button
                           className="p-1 h-7 w-7 bg-blue-300 hover:bg-blue-400 text-gray-100 transition-colors"
                           title="Replace Image"
                           onClick={() => {
@@ -228,6 +248,58 @@ export default function Component() {
           </div>
         </>
       )}
+      <Dialog
+        open={showEditModal !== null}
+        onOpenChange={(o) => {
+          if (!o) {
+            setCrop({ x: 0, y: 0 });
+            setZoom(1);
+            setCroppedAreaPixels(null);
+            setShowEditModal(null);
+          }
+        }}
+      >
+        <DialogContent
+          style={{ minHeight: "60vh" }}
+          className="flex flex-col pt-10"
+        >
+          <div className="relative flex-1">
+            <Cropper
+              image={photos[showEditModal!]!}
+              crop={crop}
+              zoom={zoom}
+              zoomSpeed={0.1}
+              aspect={8.8 / 10.7}
+              onCropChange={setCrop}
+              onCropComplete={async (croppedArea, croppedAreaPixels) => {
+                setCroppedAreaPixels(croppedAreaPixels);
+              }}
+              onZoomChange={setZoom}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={async () => {
+                const croppedImage = await getCroppedImg(
+                  photos[showEditModal!]!,
+                  croppedAreaPixels!
+                );
+                setPhotos((prevPhotos) => {
+                  const newPhotos = [...prevPhotos];
+                  newPhotos[showEditModal!] = croppedImage;
+                  return newPhotos;
+                });
+                setShowEditModal(null);
+                setCrop({ x: 0, y: 0 });
+                setZoom(1);
+                setCroppedAreaPixels(null);
+              }}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
